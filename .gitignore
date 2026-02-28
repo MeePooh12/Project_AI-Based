@@ -1,12 +1,11 @@
 node_modules/
 .venv/
 venv/
-stock-ai-env/
 Backend/.venv/
+stock-ai-env/
 __pycache__/
 .env
 *.log
 dist/
 build/
-*.pyc
 .vscode/
