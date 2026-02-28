@@ -1,0 +1,66 @@
+services:
+  frontend:
+    build: ./Frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - BROWSER=none
+      - VITE_API_URL=http://localhost:5000  # Node.js Auth
+      - VITE_FASTAPI_URL=http://localhost:8000      # Python FastAPI
+    command: npm run dev -- --host 0.0.0.0 
+    depends_on:
+      - backend
+      - fastapi
+
+  backend:
+    build: ./Backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  fastapi:
+    build: ./FastAPIBackend
+    ports:
+      - "8000:8000"                          # เปลี่ยนเป็น 8000:8000 ดีกว่า
+    working_dir: /app
+    volumes:
+      - ./FastAPIBackend:/app              # แก้สะกดให้ถูก
+      - /app/venv                          # ถ้าใช้ venv
+    env_file:
+      - ./.env
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app  # เพิ่มชัดเจน
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    restart: always
+    container_name: project-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 290746
+      POSTGRES_DB: registerdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

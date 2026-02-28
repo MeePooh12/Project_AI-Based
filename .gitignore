@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+venv/
+stock-ai-env/
+Backend/.venv/
+__pycache__/
+.env
+*.log
+dist/
+build/
+*.pyc
+.vscode/
