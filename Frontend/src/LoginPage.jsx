@@ -49,52 +49,32 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
-    console.log("handleSubmit ถูกเรียกแล้ว"); // log แรกสุด เพื่อเช็คว่าฟังก์ชันทำงานไหม
 
     try {
-      console.log("เริ่ม fetch ไป backend...");
-
       const response = await fetch("/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
-      console.log("fetch เสร็จแล้ว status:", response.status);
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Error from backend:", errorData);
-        alert(errorData.error || "Login ล้มเหลว");
+        setIsLoading(false);   // ✅ ปิด loading
+        setErrorMessage(data.error || "Invalid email or password");
         return;
       }
 
-      console.log("response OK กำลัง parse JSON...");
-
-      const data = await response.json();
-      console.log("Login success:", data); // ควรเห็น token ที่นี่
-
-      // เก็บ token
       localStorage.setItem("token", data.token);
-      console.log(
-        "Token ถูกเก็บเรียบร้อย:",
-        data.token.substring(0, 20) + "...",
-      );
-
-      setTimeout(() => {
-        console.log("หน่วงเวลาเสร็จ → กำลัง redirect ไป /search");
-        navigate("/search", { replace: true });
-      }, 500);
+      localStorage.setItem("username", data.username);
 
       setIsLoading(false);
-      navigate("/search");
+      navigate("/search", { replace: true });
+
     } catch (err) {
-      console.error("Login fetch error:", err);
-      setErrorMessage("เกิดข้อผิดพลาด: " + err.message);
       setIsLoading(false);
+      setErrorMessage("Server error");
     }
   };
 
@@ -153,7 +133,7 @@ export default function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
               ></button>
             </div>
-            {passwordError && <p className="error-message">{passwordError}</p>}
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
 
             <div className="login-options">
               <label>
@@ -192,7 +172,6 @@ export default function LoginPage() {
               className="guest-btn"
               onClick={() => {
                 loginAsGuest();
-                navigate("/search");
               }}
             >
               เข้าใช้งานแบบ Guest

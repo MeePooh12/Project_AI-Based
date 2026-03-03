@@ -26,6 +26,10 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/risk': {
+        target: 'http://fastapi:8000',
+        changeOrigin: true
+      },
       '/rss': {
         target: 'http://fastapi:8000',
         changeOrigin: true,

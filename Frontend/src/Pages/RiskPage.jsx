@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./RiskPage.css"; // สร้าง CSS ตามต้องการ
 
-const API_BASE = import.meta.env?.VITE_API_BASE || "http://localhost:8000";
+const API_BASE =
+  import.meta.env.VITE_FASTAPI_URL || "http://localhost:8000";
 
 export default function RiskPage() {
   const navigate = useNavigate();
@@ -15,10 +16,11 @@ export default function RiskPage() {
 
   const handleRiskClick = (risk) => {
     const r = (risk || "").toLowerCase();
+    console.log("Clicked:", r); 
     setSelectedRisk(r);
     localStorage.setItem("selectedRisk", r);
   };
-
+  
   const handleBack = () => navigate("/search");
 
   // ตรวจสอบ login
@@ -32,6 +34,8 @@ export default function RiskPage() {
 
   // fetch แนะนำหุ้นตาม selectedRisk
   useEffect(() => {
+    console.log("selectedRisk changed:", selectedRisk);
+
     if (!selectedRisk) return;
 
     const fetchRecs = async () => {
@@ -41,11 +45,20 @@ export default function RiskPage() {
         setRecs([]);
 
         const level = selectedRisk.toUpperCase();
+
+        console.log("Calling API:", `${API_BASE}/risk/recommend?level=${level}`);
+
         const res = await fetch(`${API_BASE}/risk/recommend?level=${level}`);
+
+        console.log("Status:", res.status);
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        console.log("Response Data:", data);
 
-        if (data && Array.isArray(data.items)) {
+        if (Array.isArray(data)) {
+          setRecs(data);
+        } else if (Array.isArray(data.items)) {
           setRecs(data.items);
         } else {
           setErr("ไม่มีข้อมูลแนะนำหุ้นในระดับนี้");
